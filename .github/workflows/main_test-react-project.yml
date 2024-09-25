@@ -33,7 +33,7 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v3
         with:
-          name: react-frontend-app
+          name: test-app
           path: build/
 
   deploy:
@@ -47,13 +47,13 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: react-frontend-app
-          path: ./react-frontend-app
+          name: test-app
+          path: ./test-app
           
       - name: List artifact directory contents
         run: |
           echo "Contents of artifact directory:"
-          dir ./react-frontend-app  
+          dir ./test-app  
       
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
