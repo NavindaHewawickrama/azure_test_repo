@@ -16,23 +16,23 @@ jobs:
         node-version: [20.x, 21.x, 22.x]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v3
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
-      - run: npm ci
-      - run: npm run build --if-present
-      - run: npm test
-
-      - name: Check build directory
-        run: |
-          echo "Checking build directory contents"
-          dir build/
+      - name: Clear npm cache
+        run: npm cache clean --force
+      - name: Install dependencies
+        run: npm ci
+      - name: Build
+        run: npm run build --if-present
+      - name: Run tests
+        run: npm test
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-app
           path: build/
@@ -50,11 +50,11 @@ jobs:
         with:
           name: test-app
           path: ./test-app
-          
+
       - name: List artifact directory contents
         run: |
           echo "Contents of artifact directory:"
-          dir ./test-app  
+          dir ./test-app
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
