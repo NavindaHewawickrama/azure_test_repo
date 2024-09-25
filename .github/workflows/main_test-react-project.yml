@@ -5,39 +5,39 @@ name: Build and deploy Node.js app to Azure Web App - test-react-project
 
 on:
   push:
-    branches:
-      - main
+    branches: main
+  pull_request:
+    branches: main
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        node-version: [20.x, 21.x, 22.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node.js version
-        uses: actions/setup-node@v3
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
-          node-version: '20.x'
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run build --if-present
+      - run: npm test
 
-      - name: npm install, build, and test
-        run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
-
-      - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
-
-      - name: Upload artifact for deployment job
-        uses: actions/upload-artifact@v4
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
         with:
-          name: node-app
-          path: release.zip
+          name: react-frontend-app
+          path: build/
 
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     needs: build
     environment:
       name: 'Production'
@@ -47,10 +47,13 @@ jobs:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
-          name: node-app
-
-      - name: Unzip artifact for deployment
-        run: unzip release.zip
+          name: react-frontend-app
+          path: ./react-frontend-app
+          
+      - name: List artifact directory contents
+        run: |
+          echo "Contents of artifact directory:"
+          dir ./react-frontend-app  
       
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
